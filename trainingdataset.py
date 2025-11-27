@@ -5,7 +5,7 @@ import os
 
 # --- KONFIGURASI ---
 DATA_DIR = 'dataset'
-IMG_SIZE = 128
+IMG_SIZE = 224   # MobileNetV2 wajib 160/192/224
 BATCH_SIZE = 32
 
 print("=== MEMUAT DATASET ===")
@@ -36,51 +36,51 @@ AUTOTUNE = tf.data.AUTOTUNE
 train_ds = train_ds.shuffle(1000).cache().prefetch(buffer_size=AUTOTUNE)
 val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
-print("=== MEMBANGUN MODEL CNN OPTIMAL ===")
 
-# --- DATA AUGMENTATION ---
+# ======================================================
+# ===============  ARSITEKTUR MobileNetV2 ===============
+# ======================================================
+
+print("\n=== MEMBANGUN MODEL MobileNetV2 ===")
+
+# 1. Data augmentation
 data_augmentation = tf.keras.Sequential([
     layers.RandomFlip("horizontal"),
     layers.RandomRotation(0.15),
     layers.RandomZoom(0.2),
 ])
 
-# --- ARSITEKTUR CNN BARU ---
-model = models.Sequential([
-    layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3)),
-    data_augmentation,
+# 2. Load MobileNetV2 (pretrained)
+base_model = tf.keras.applications.MobileNetV2(
+    input_shape=(IMG_SIZE, IMG_SIZE, 3),
+    include_top=False,
+    weights='imagenet'
+)
 
-    layers.Rescaling(1./255),
+base_model.trainable = False   # freeze fitur bawaan mobilenet
 
-    layers.Conv2D(32, 3, padding="same", activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D(),
+# 3. Full model
+inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
 
-    layers.Conv2D(64, 3, padding="same", activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D(),
+x = data_augmentation(inputs)
+x = tf.keras.applications.mobilenet_v2.preprocess_input(x)
 
-    layers.Conv2D(128, 3, padding="same", activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D(),
+x = base_model(x, training=False)  # fitur dari MobileNetV2
 
-    layers.Conv2D(256, 3, padding="same", activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D(),
+x = layers.GlobalAveragePooling2D()(x)
+x = layers.Dropout(0.3)(x)
+x = layers.Dense(128, activation="relu")(x)
+x = layers.Dropout(0.3)(x)
 
-    layers.Flatten(),
+outputs = layers.Dense(len(class_names), activation='softmax')(x)
 
-    layers.Dense(256, activation='relu'),
-    layers.Dropout(0.5),
-
-    layers.Dense(len(class_names), activation='softmax')
-])
+model = tf.keras.Model(inputs, outputs)
 
 model.summary()
 
 # --- TRAINING SETTING ---
 model.compile(
-    optimizer='adam',
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0008),
     loss='sparse_categorical_crossentropy',
     metrics=['accuracy']
 )
