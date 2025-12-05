@@ -1,81 +1,63 @@
 import tensorflow as tf
+from sklearn.metrics import confusion_matrix, classification_report
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix, classification_report
-import os
 
-# --- KONFIGURASI ---
-MODEL_PATH = "best_mobilenetv2_tomato.h5"
-DATA_DIR = "dataset"
 IMG_SIZE = 224
-BATCH_SIZE = 32
+TEST_DIR = "DATASET/test"
 
-# --- LOAD MODEL ---
-if not os.path.exists(MODEL_PATH):
-    print("ERROR: Model tidak ditemukan!")
-    exit()
+# ==========================
+# LOAD MODEL
+# ==========================
+model = tf.keras.models.load_model("mobilenetv2_best.keras")
 
-print("Memuat model:", MODEL_PATH)
-model = tf.keras.models.load_model(MODEL_PATH)
-
-# --- LOAD DATASET VALIDASI SAJA ---
-val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    DATA_DIR,
-    validation_split=0.2,
-    subset="validation",
-    seed=42,
+# ==========================
+# LOAD TEST SET
+# ==========================
+test_ds = tf.keras.utils.image_dataset_from_directory(
+    TEST_DIR,
     image_size=(IMG_SIZE, IMG_SIZE),
-    batch_size=BATCH_SIZE,
+    batch_size=32,
     shuffle=False
 )
 
-class_names = val_ds.class_names
-print("Kelas:", class_names)
+class_names = test_ds.class_names
+print("Class Names:", class_names)
 
-# --- AMBIL LABEL ASLI ---
+# PREPROCESS MOBILE NET
+preprocess = tf.keras.applications.mobilenet_v2.preprocess_input
+test_ds = test_ds.map(lambda x, y: (preprocess(x), y))
+
+# ==========================
+# PREDIKSI
+# ==========================
 y_true = []
-for _, labels in val_ds:
+y_pred = []
+
+for images, labels in test_ds:
+    preds = model.predict(images)
+    preds = np.argmax(preds, axis=1)
+
     y_true.extend(labels.numpy())
-y_true = np.array(y_true)
+    y_pred.extend(preds)
 
-# --- PREDIKSI ---
-y_pred = model.predict(val_ds)
-y_pred_classes = np.argmax(y_pred, axis=1)
+# ==========================
+# CONFUSION MATRIX
+# ==========================
+cm = confusion_matrix(y_true, y_pred)
+print("\nConfusion Matrix:\n", cm)
 
-# --- CONFUSION MATRIX ---
-cm = confusion_matrix(y_true, y_pred_classes)
-
-plt.figure(figsize=(8,6))
-sns.heatmap(cm, annot=True, fmt="d",
-            xticklabels=class_names,
-            yticklabels=class_names)
-plt.title("Confusion Matrix (Model MobileNetV2 yang Sudah Diperbaiki)")
+plt.imshow(cm, cmap="Blues")
+plt.title("Confusion Matrix")
+plt.colorbar()
+plt.xticks(range(len(class_names)), class_names, rotation=45)
+plt.yticks(range(len(class_names)), class_names)
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
 plt.show()
 
-# --- CLASSIFICATION REPORT ---
-print("\n=== Classification Report ===")
-print(classification_report(y_true, y_pred_classes, target_names=class_names))
-
-# --- VISUALISASI CONTOH PREDIKSI ---
-import random
-
-plt.figure(figsize=(12,8))
-
-for i in range(9):
-    idx = random.randint(0, len(y_true)-1)
-    img_batch, label_batch = next(iter(val_ds))
-
-    img = img_batch[idx].numpy().astype("uint8")
-    true_label = class_names[y_true[idx]]
-    pred_label = class_names[y_pred_classes[idx]]
-
-    plt.subplot(3,3,i+1)
-    plt.imshow(img)
-    plt.title(f"True: {true_label}\nPred: {pred_label}")
-    plt.axis("off")
-
-plt.suptitle("Sample Prediksi Model (MobileNetV2 Fine-tuned)", fontsize=16)
-plt.show()
+# ==========================
+# CLASSIFICATION REPORT
+# ==========================
+print("\nClassification Report:")
+print(classification_report(y_true, y_pred, target_names=class_names))
