@@ -7,6 +7,7 @@ import pandas as pd
 import os
 import tempfile
 import time
+import altair as alt # Import Library Grafik Keren
 from fpdf import FPDF
 
 # ==========================================
@@ -74,16 +75,16 @@ st.markdown("""
     /* CARD HASIL DIAGNOSA */
     .result-box {
         background: #ffffff;
-        border-left: 8px solid #ef4444; /* Garis merah di kiri */
+        border-left: 8px solid #ccc; /* Default Abu */
         border-radius: 12px;
         padding: 25px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         margin-bottom: 20px;
     }
     
-    .result-box.healthy {
-        border-left-color: #22c55e; /* Hijau jika sehat */
-    }
+    .result-box.healthy { border-left-color: #22c55e; } /* Hijau */
+    .result-box.sick { border-left-color: #ef4444; } /* Merah */
+    .result-box.unknown { border-left-color: #f59e0b; } /* Kuning/Oranye */
 
     /* SIDEBAR */
     [data-testid="stSidebar"] {
@@ -169,7 +170,7 @@ knowledge_base = {
     }
 }
 
-# PDF GENERATOR (FIXED ENCODING)
+# PDF GENERATOR (UPDATED FOR UNKNOWN HANDLING)
 class PDF(FPDF):
     def header(self):
         self.set_font('Arial', 'B', 14)
@@ -191,25 +192,34 @@ def create_pdf(data):
         except: pass
         pdf.ln(5)
         
-        info = knowledge_base.get(item['prediksi'], {})
-        
-        # FIX ERROR PDF: Encode ke latin-1 dengan 'replace' agar tidak crash
-        title = info.get('title').encode('latin-1', 'replace').decode('latin-1')
-        treat = info.get('treatment').encode('latin-1', 'replace').decode('latin-1')
-        
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 10, f"Diagnosa: {title}", ln=True)
-        pdf.set_font("Arial", '', 11)
-        pdf.cell(0, 10, f"Confidence: {item['conf']}", ln=True)
-        pdf.ln(2)
-        pdf.multi_cell(0, 7, f"REKOMENDASI:\n{treat}")
+        # CEK APAKAH UNKNOWN
+        if item.get('is_unknown', False):
+            pdf.set_text_color(220, 38, 38) # Merah
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 10, "STATUS: OBJEK TIDAK DIKENALI", ln=True)
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_font("Arial", '', 11)
+            pdf.multi_cell(0, 7, "Sistem mendeteksi bahwa gambar ini bukan daun tomat yang valid atau kualitas gambar terlalu buruk. Harap ambil ulang foto.")
+        else:
+            info = knowledge_base.get(item['prediksi'], {})
+            
+            # Encode ke latin-1 dengan 'replace' agar tidak crash
+            title = info.get('title').encode('latin-1', 'replace').decode('latin-1')
+            treat = info.get('treatment').encode('latin-1', 'replace').decode('latin-1')
+            
+            pdf.set_font("Arial", 'B', 11)
+            pdf.cell(0, 10, f"Diagnosa: {title}", ln=True)
+            pdf.set_font("Arial", '', 11)
+            pdf.cell(0, 10, f"Confidence: {item['conf']}", ln=True)
+            pdf.ln(2)
+            pdf.multi_cell(0, 7, f"REKOMENDASI:\n{treat}")
+            
         pdf.ln(5)
     
-    # Return as bytes with safe encoding
     return pdf.output(dest='S').encode('latin-1', 'replace')
 
 # ==========================================
-# 3. SIDEBAR
+# 3. SIDEBAR (DENGAN SMART THRESHOLD)
 # ==========================================
 if "results" not in st.session_state: st.session_state.results = []
 
@@ -223,7 +233,9 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.info("💡 **Tips:** Gunakan pencahayaan yang terang saat mengambil foto daun.")
+    st.markdown("### ⚙️ Pengaturan Threshold")
+    # FITUR SMART THRESHOLD DI SINI
+    threshold = st.slider("Batas Keyakinan (%)", 0, 100, 40, help="Jika keyakinan AI di bawah angka ini, gambar dianggap bukan daun/tidak dikenal.")
 
 # ==========================================
 # 4. HALAMAN DIAGNOSA
@@ -255,7 +267,7 @@ if pilihan == "🔍 Diagnosa Penyakit":
     if uploaded:
         st.session_state.results = []
         with st.status("🤖 AI Sedang Menganalisis...", expanded=True) as status:
-            time.sleep(0.5) # Gimmick loading
+            time.sleep(0.5) 
             
             for up_file in uploaded:
                 img = Image.open(up_file)
@@ -265,19 +277,30 @@ if pilihan == "🔍 Diagnosa Penyakit":
                 
                 pred = model.predict(img_ready)
                 idx = np.argmax(pred)
-                conf = np.max(pred) * 100
+                raw_conf = np.max(pred) * 100 # Nilai float
+                
+                # --- LOGIKA SMART THRESHOLD ---
+                is_unknown = False
                 label = class_names[idx]
                 
-                # Simpan probabilitas untuk grafik
-                probs = {class_names[i]: float(pred[0][i]*100) for i in range(len(class_names))}
+                if raw_conf < threshold:
+                    is_unknown = True
+                    label = "Objek Tidak Dikenali"
+                
+                # Data untuk Grafik Altair
+                df_chart = pd.DataFrame({
+                    'Kategori': class_names,
+                    'Confidence (%)': pred[0] * 100
+                })
                 
                 st.session_state.results.append({
                     "file": up_file.name if source == "upload" else "Camera",
                     "img": img,
                     "prediksi": label,
-                    "conf": f"{conf:.2f}%",
-                    "raw_conf": conf,
-                    "probs": probs
+                    "conf": f"{raw_conf:.2f}%",
+                    "raw_conf": raw_conf,
+                    "is_unknown": is_unknown,
+                    "chart_data": df_chart
                 })
             status.update(label="✅ Selesai!", state="complete", expanded=False)
 
@@ -287,33 +310,59 @@ if pilihan == "🔍 Diagnosa Penyakit":
         if st.button("🔄 Reset"): st.session_state.results = []; st.rerun()
 
         for res in st.session_state.results:
-            info = knowledge_base.get(res['prediksi'], {})
-            is_healthy = "Healthy" in res['prediksi']
-            box_class = "result-box healthy" if is_healthy else "result-box"
-            color_title = "#16a34a" if is_healthy else "#dc2626"
+            # Tentukan Warna Box
+            if res['is_unknown']:
+                box_class = "result-box unknown"
+                title_text = "⚠️ OBJEK TIDAK DIKENALI"
+                title_color = "#f59e0b"
+            elif "Healthy" in res['prediksi']:
+                box_class = "result-box healthy"
+                title_text = f"🌿 {res['prediksi']}"
+                title_color = "#16a34a"
+            else:
+                box_class = "result-box sick"
+                title_text = f"🦠 {res['prediksi']}"
+                title_color = "#dc2626"
             
             # KOTAK HASIL
             st.markdown(f'<div class="{box_class}">', unsafe_allow_html=True)
-            col1, col2 = st.columns([1, 2])
+            col1, col2 = st.columns([1.5, 2.5])
             
             with col1:
                 st.image(res['img'], caption=res['file'], use_container_width=True)
-                # GRAFIK PROBABILITAS (FIXED)
-                st.caption("📊 Grafik Probabilitas:")
-                chart_data = pd.DataFrame(list(res['probs'].items()), columns=['Kategori', 'Probabilitas'])
-                st.bar_chart(chart_data.set_index('Kategori'), height=150)
+                
+                # --- GRAFIK ALTAIR (DIPERBAIKI & LEBIH RAPI) ---
+                if not res['is_unknown']:
+                    st.caption("📊 Analisis Probabilitas:")
+                    chart = alt.Chart(res['chart_data']).mark_bar().encode(
+                        x=alt.X('Confidence (%)', title='Tingkat Keyakinan (%)'),
+                        y=alt.Y('Kategori', sort='-x', title=None),
+                        color=alt.condition(
+                            alt.datum.Kategori == res['prediksi'],
+                            alt.value('#ef4444'),  # Warna Merah untuk pemenang
+                            alt.value('#e5e7eb')   # Warna Abu untuk lainnya
+                        ),
+                        tooltip=['Kategori', 'Confidence (%)']
+                    ).properties(height=120)
+                    st.altair_chart(chart, use_container_width=True)
+                # -----------------------------------------------
             
             with col2:
-                st.markdown(f"<h2 style='color: {color_title}; margin:0;'>{info['title']}</h2>", unsafe_allow_html=True)
-                st.markdown(f"**Tingkat Keyakinan:** {res['conf']}")
-                
+                st.markdown(f"<h2 style='color: {title_color}; margin:0;'>{title_text}</h2>", unsafe_allow_html=True)
+                st.markdown(f"**Akurasi Deteksi:** {res['conf']}")
                 st.markdown("---")
                 
-                t_solusi, t_gejala = st.tabs(["💊 **SOLUSI**", "🔍 **GEJALA**"])
-                with t_solusi:
-                    st.info(info['treatment'])
-                with t_gejala:
-                    st.write(info['symptoms'])
+                if res['is_unknown']:
+                    st.error("Sistem menolak hasil ini.")
+                    st.write(f"Tingkat keyakinan AI hanya **{res['conf']}** (di bawah batas {threshold}%).")
+                    st.write("Kemungkinan penyebab: Foto buram, pencahayaan kurang, atau objek bukan daun tomat.")
+                else:
+                    info = knowledge_base.get(res['prediksi'], {})
+                    t_solusi, t_gejala = st.tabs(["💊 **SOLUSI**", "🔍 **GEJALA**"])
+                    with t_solusi:
+                        st.info(info.get('treatment'))
+                    with t_gejala:
+                        st.write(info.get('symptoms'))
             
             st.markdown('</div>', unsafe_allow_html=True)
 
@@ -321,10 +370,12 @@ if pilihan == "🔍 Diagnosa Penyakit":
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
         st.subheader("📥 Download Laporan")
         c1, c2 = st.columns(2)
-        csv_data = [{"File": r['file'], "Diagnosa": r['prediksi'], "Confidence": r['conf']} for r in st.session_state.results]
+        
+        # Bersihkan data untuk CSV (hapus gambar/chart data)
+        clean_data = [{k:v for k,v in r.items() if k not in ['img', 'chart_data']} for r in st.session_state.results]
         
         with c1:
-            st.download_button("📄 Download CSV", pd.DataFrame(csv_data).to_csv(index=False).encode('utf-8'), "report.csv", "text/csv", use_container_width=True)
+            st.download_button("📄 Download CSV", pd.DataFrame(clean_data).to_csv(index=False).encode('utf-8'), "report.csv", "text/csv", use_container_width=True)
         with c2:
             try:
                 pdf_bytes = create_pdf(st.session_state.results)
