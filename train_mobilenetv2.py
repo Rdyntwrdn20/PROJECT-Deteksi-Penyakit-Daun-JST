@@ -127,4 +127,11 @@ plt.title("Loss Training")
 plt.legend(["Train", "Val"])
 
 plt.tight_layout()
+
+# --- TAMBAHKAN BAGIAN INI ---
+filename_grafik = "training_graph.png"
+plt.savefig(filename_grafik) 
+print(f"Grafik berhasil disimpan sebagai {filename_grafik}")
+# ----------------------------
+
 plt.show()
