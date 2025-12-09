@@ -13,7 +13,7 @@ def predict_upload(model, class_names):
     # Load gambar
     img = cv2.imread(img_path)
     if img is None:
-        print("❌ Gambar tidak ditemukan! Pastikan nama file benar.")
+        print("Gambar tidak ditemukan! Pastikan nama file benar.")
         print(f"Dicari di: {img_path}")
         return
     
