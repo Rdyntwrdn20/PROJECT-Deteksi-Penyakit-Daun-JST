@@ -1,4 +1,6 @@
 import tensorflow as tf
+import numpy as np
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras import layers, models
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
@@ -11,9 +13,10 @@ import os
 DATA_DIR = "DATASET"
 TRAIN_DIR = os.path.join(DATA_DIR, "train")
 VAL_DIR = os.path.join(DATA_DIR, "val")
+TEST_DIR = os.path.join(DATA_DIR, "test")
 IMG_SIZE = 224
 BATCH_SIZE = 32
-EPOCHS = 15
+EPOCHS = 25
 
 # ==========================
 # LOAD DATASET
@@ -30,8 +33,17 @@ val_ds = tf.keras.utils.image_dataset_from_directory(
     batch_size=BATCH_SIZE
 )
 
+test_ds = tf.keras.utils.image_dataset_from_directory(
+    TEST_DIR,
+    image_size=(IMG_SIZE, IMG_SIZE),
+    batch_size=BATCH_SIZE,
+    shuffle=False
+)
+
+
 class_names = train_ds.class_names
 print("Class Names:", class_names)
+
 
 # ==========================
 # PREFETCH
@@ -45,8 +57,10 @@ val_ds = val_ds.prefetch(AUTOTUNE)
 # ==========================
 preprocess = tf.keras.applications.mobilenet_v2.preprocess_input
 
-train_ds = train_ds.map(lambda x, y: (preprocess(x), y))
-val_ds = val_ds.map(lambda x, y: (preprocess(x), y))
+
+train_ds = train_ds.map(lambda x, y: (preprocess(x), y)).prefetch(AUTOTUNE)
+val_ds   = val_ds.map(lambda x, y: (preprocess(x), y)).prefetch(AUTOTUNE)
+test_ds  = test_ds.map(lambda x, y: (preprocess(x), y)).prefetch(AUTOTUNE)
 
 # ==========================
 # ARSITEKTUR MODEL
@@ -133,5 +147,36 @@ filename_grafik = "training_graph.png"
 plt.savefig(filename_grafik) 
 print(f"Grafik berhasil disimpan sebagai {filename_grafik}")
 # ----------------------------
+
+# ==========================
+# CONFUSION MATRIX
+# ==========================
+print("\nMembuat Confusion Matrix...")
+
+# Prediksi data test
+y_pred_prob = model.predict(test_ds)
+y_pred = np.argmax(y_pred_prob, axis=1)
+
+# Label asli
+y_true = np.concatenate([y for x, y in test_ds], axis=0)
+
+# Hitung confusion matrix
+cm = confusion_matrix(y_true, y_pred)
+
+# Visualisasi
+disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=class_names
+)
+
+plt.figure(figsize=(6,6))
+disp.plot(cmap="Blues", values_format="d")
+plt.title("Confusion Matrix MobileNetV2")
+plt.tight_layout()
+
+# Simpan gambar confusion matrix
+plt.savefig("confusion_matrix.png")
+print("Confusion matrix disimpan sebagai confusion_matrix.png")
+
 
 plt.show()
