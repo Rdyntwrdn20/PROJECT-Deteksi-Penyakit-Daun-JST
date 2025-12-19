@@ -1,0 +1,663 @@
+/* ================================================
+   🍅 TOMATO SMART DOCTOR - CLEAN UI STYLES
+   ================================================ */
+
+/* IMPORT FONT POPPINS */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* ==========================================
+   GLOBAL RESET & BASE STYLES
+   ========================================== */
+* {
+    font-family: 'Poppins', sans-serif;
+    color: #1f2937 !important;
+}
+
+/* SMOOTH SCROLLING */
+html {
+    scroll-behavior: smooth;
+}
+
+/* BACKGROUND BERSIH */
+.stApp {
+    background: #ffffff;
+}
+
+/* ==========================================
+   HEADER GRADIENT DENGAN ANIMASI
+   ========================================== */
+.main-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+    padding: 3rem 2rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+/* Subtle shine effect */
+.main-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 70%
+    );
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.main-header h1 {
+    color: white !important;
+    font-weight: 800;
+    font-size: 3.2rem;
+    margin: 0;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+}
+
+.main-header p {
+    color: #fecaca !important;
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-top: 0.8rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* ==========================================
+   ANIMASI ENTRANCE
+   ========================================== */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ==========================================
+   CARD DESIGN - PUTIH BERSIH
+   ========================================== */
+.content-box {
+    background: #ffffff;
+    padding: 35px;
+    border-radius: 20px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.content-box:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+}
+
+/* ==========================================
+   RESULT BOX - PUTIH TANPA GRADIENT
+   ========================================== */
+.result-box {
+    background: #ffffff;
+    border-left: 6px solid #ccc;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+    animation: scaleIn 0.5s ease-out;
+}
+
+.result-box.healthy {
+    border-left-color: #22c55e;
+}
+
+.result-box.sick {
+    border-left-color: #ef4444;
+}
+
+.result-box.unknown {
+    border-left-color: #f59e0b;
+}
+
+.result-box:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+}
+
+/* ==========================================
+   SIDEBAR - PUTIH BERSIH
+   ========================================== */
+[data-testid="stSidebar"] {
+    background: #ffffff;
+    border-right: 2px solid #e5e7eb;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.03);
+}
+
+[data-testid="stSidebar"] [data-testid="stImage"] {
+    border-radius: 50%;
+    padding: 15px;
+    background: #fef2f2;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+    margin: 0 auto 20px;
+    display: block;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.25);
+    }
+}
+
+/* ==========================================
+   BUTTON STYLES MODERN
+   ========================================== */
+.stButton > button {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white !important;
+    border-radius: 12px;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.stButton > button:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.stButton > button:active {
+    transform: translateY(-1px);
+}
+
+/* ==========================================
+   DOWNLOAD BUTTONS
+   ========================================== */
+.stDownloadButton > button {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white !important;
+    border-radius: 12px;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.stDownloadButton > button:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* ==========================================
+   METRIC CARDS - PUTIH BERSIH
+   ========================================== */
+div[data-testid="metric-container"] {
+    background: #ffffff;
+    border: 2px solid #e5e7eb;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+div[data-testid="metric-container"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #ef4444, #dc2626);
+    border-radius: 4px 0 0 4px;
+}
+
+div[data-testid="metric-container"]:hover {
+    border-color: #ef4444;
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15);
+    transform: translateY(-3px);
+}
+
+div[data-testid="metric-container"] label {
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    color: #6b7280 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+div[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+    color: #1f2937 !important;
+}
+
+/* ==========================================
+   FILE UPLOADER STYLING - PUTIH BERSIH
+   ========================================== */
+[data-testid="stFileUploader"] {
+    background: #ffffff !important;
+    border: 2px dashed #d1d5db;
+    border-radius: 16px;
+    padding: 30px;
+    transition: all 0.3s ease;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: #ef4444;
+    background: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);
+}
+
+/* File uploader section & text */
+[data-testid="stFileUploader"] section {
+    background: #ffffff !important;
+}
+
+[data-testid="stFileUploader"] div {
+    background: transparent !important;
+}
+
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] span,
+[data-testid="stFileUploader"] p {
+    color: #1f2937 !important;
+}
+
+/* Upload button inside file uploader */
+[data-testid="stFileUploader"] button {
+    background: #ffffff !important;
+    color: #ef4444 !important;
+    border: 2px solid #ef4444 !important;
+    border-radius: 8px;
+}
+
+[data-testid="stFileUploader"] button:hover {
+    background: #fef2f2 !important;
+}
+
+/* ==========================================
+   TABS MODERN
+   ========================================== */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 10px;
+    background: transparent;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: #ffffff;
+    border-radius: 12px 12px 0 0;
+    padding: 12px 24px;
+    font-weight: 600;
+    color: #6b7280 !important;
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+    border-bottom: none;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: #f9fafb;
+    color: #1f2937 !important;
+    transform: translateY(-2px);
+}
+
+.stTabs [aria-selected="true"] {
+    background: #ffffff !important;
+    color: #ef4444 !important;
+    border-color: #ef4444;
+    border-bottom: 2px solid #ffffff;
+    box-shadow: 0 -2px 8px rgba(239, 68, 68, 0.15);
+}
+
+/* ==========================================
+   SELECTBOX & SLIDER - PUTIH BERSIH
+   ========================================== */
+.stSelectbox > div > div {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    background: #ffffff !important;
+    transition: all 0.3s ease;
+}
+
+.stSelectbox > div > div:hover {
+    border-color: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+/* Dropdown menu yang muncul */
+[data-baseweb="popover"] {
+    background: #ffffff !important;
+}
+
+[role="listbox"] {
+    background: #ffffff !important;
+}
+
+[role="option"] {
+    background: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+[role="option"]:hover {
+    background: #fef2f2 !important;
+    color: #ef4444 !important;
+}
+
+/* Selected option text */
+.stSelectbox div[data-baseweb="select"] > div {
+    background: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+.stSlider > div > div > div {
+    background: linear-gradient(to right, #ef4444, #dc2626);
+}
+
+/* ==========================================
+   STATUS INDICATOR
+   ========================================== */
+[data-testid="stStatus"] {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================
+   IMAGE CONTAINER
+   ========================================== */
+[data-testid="stImage"] img {
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+[data-testid="stImage"] img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================
+   ALERTS & MESSAGES - JELAS TERBACA
+   ========================================== */
+.stAlert {
+    border-radius: 12px;
+    border-left-width: 5px;
+    padding: 16px 20px;
+    background: #ffffff !important;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Error Alert */
+div[data-baseweb="notification"][kind="error"],
+.stAlert[data-baseweb="notification"][kind="error"] {
+    background: #ffffff !important;
+    border-left-color: #ef4444;
+    border: 2px solid #fecaca;
+}
+
+/* Success Alert */
+div[data-baseweb="notification"][kind="success"],
+.stAlert[data-baseweb="notification"][kind="success"] {
+    background: #ffffff !important;
+    border-left-color: #22c55e;
+    border: 2px solid #bbf7d0;
+}
+
+/* Info Alert */
+div[data-baseweb="notification"][kind="info"],
+.stAlert[data-baseweb="notification"][kind="info"] {
+    background: #ffffff !important;
+    border-left-color: #3b82f6;
+    border: 2px solid #bfdbfe;
+}
+
+/* Warning Alert */
+div[data-baseweb="notification"][kind="warning"],
+.stAlert[data-baseweb="notification"][kind="warning"] {
+    background: #ffffff !important;
+    border-left-color: #f59e0b;
+    border: 2px solid #fde68a;
+}
+
+/* ==========================================
+   RADIO BUTTONS
+   ========================================== */
+.stRadio > div {
+    gap: 10px;
+}
+
+.stRadio > div > label {
+    background: #ffffff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stRadio > div > label:hover {
+    background: #f9fafb;
+    border-color: #ef4444;
+    transform: translateX(5px);
+}
+
+.stRadio > div > label[data-checked="true"] {
+    background: #ffffff;
+    border-color: #ef4444;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* ==========================================
+   CAMERA INPUT
+   ========================================== */
+[data-testid="stCameraInput"] {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+}
+
+/* ==========================================
+   SCROLLBAR CUSTOM
+   ========================================== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #ef4444, #dc2626);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #dc2626, #b91c1c);
+}
+
+/* ==========================================
+   RESPONSIVE TWEAKS
+   ========================================== */
+@media (max-width: 768px) {
+    .main-header h1 {
+        font-size: 2rem;
+    }
+    
+    .main-header p {
+        font-size: 1rem;
+    }
+    
+    .content-box {
+        padding: 20px;
+    }
+    
+    .result-box {
+        padding: 20px;
+    }
+}
+
+/* ==========================================
+   LOADING SPINNER
+   ========================================== */
+.stSpinner > div {
+    border-top-color: #ef4444 !important;
+}
+
+/* ==========================================
+   DATAFRAME STYLING
+   ========================================== */
+[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+}
+
+/* ==========================================
+   TEXT CONTRAST - SUPAYA JELAS
+   ========================================== */
+h1, h2, h3, h4, h5, h6 {
+    color: #1f2937 !important;
+}
+
+p, span, div {
+    color: #1f2937 !important;
+}
+
+label {
+    color: #4b5563 !important;
+}
+
+/* ==========================================
+   SUBHEADER STYLING
+   ========================================== */
+.stMarkdown h2 {
+    color: #1f2937 !important;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #ef4444;
+    display: inline-block;
+}
+
+.stMarkdown h3 {
+    color: #1f2937 !important;
+    font-weight: 600;
+    margin-top: 1.5rem;
+}
+
+/* ==========================================
+   CAPTION TEXT
+   ========================================== */
+.stMarkdown small,
+.stMarkdown .caption {
+    color: #6b7280 !important;
+}
+
+/* ==========================================
+   DIVIDER
+   ========================================== */
+hr {
+    border: none;
+    border-top: 2px solid #e5e7eb;
+    margin: 2rem 0;
+}
+
+/* ==========================================
+   EMOJI ENHANCEMENT
+   ========================================== */
+.main-header h1::before {
+    display: inline-block;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}

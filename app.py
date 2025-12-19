@@ -19,105 +19,11 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 # ==========================================
-# CSS PREMIUM (HIGH CONTRAST & CLEAN)
+# LOAD EXTERNAL CSS
 # ==========================================
-st.markdown("""
-    <style>
-    /* IMPORT FONT POPPINS */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
-    /* GLOBAL RESET */
-    * {
-        font-family: 'Poppins', sans-serif;
-        color: #1f2937 !important; /* Force Text Black-Gray */
-    }
-
-    /* BACKGROUND */
-    .stApp {
-        background-color: #f3f4f6; /* Abu-abu sangat muda */
-    }
-
-    /* HEADER GRADIENT */
-    .main-header {
-        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); /* Merah Tomat */
-        padding: 2.5rem;
-        border-radius: 20px;
-        box-shadow: 0 10px 25px rgba(185, 28, 28, 0.2);
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    .main-header h1 {
-        color: white !important;
-        font-weight: 800;
-        font-size: 3rem;
-        margin: 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .main-header p {
-        color: #fecaca !important; /* Pink Muda */
-        font-size: 1.2rem;
-        font-weight: 500;
-        margin-top: 0.5rem;
-    }
-
-    /* CARD DESIGN (KOTAK KONTEN) */
-    .content-box {
-        background: #ffffff;
-        padding: 30px;
-        border-radius: 16px;
-        border: 1px solid #e5e7eb; /* Garis tipis */
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Bayangan Halus */
-        margin-bottom: 20px;
-    }
-
-    /* CARD HASIL DIAGNOSA */
-    .result-box {
-        background: #ffffff;
-        border-left: 8px solid #ccc; /* Default Abu */
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-    
-    .result-box.healthy { border-left-color: #22c55e; } /* Hijau */
-    .result-box.sick { border-left-color: #ef4444; } /* Merah */
-    .result-box.unknown { border-left-color: #f59e0b; } /* Kuning/Oranye */
-
-    /* SIDEBAR */
-    [data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid #e5e7eb;
-    }
-
-    /* TOMBOL */
-    .stButton > button {
-        background: #ef4444;
-        color: white !important;
-        border-radius: 8px;
-        border: none;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
-        transition: all 0.2s;
-        width: 100%;
-    }
-    .stButton > button:hover {
-        background: #dc2626;
-        transform: translateY(-2px);
-    }
-
-    /* METRIC CARD */
-    div[data-testid="metric-container"] {
-        background-color: #fff;
-        border: 1px solid #e5e7eb;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    </style>
-""", unsafe_allow_html=True)
+with open("style.css",  encoding="utf-8") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # HEADER UI
 st.markdown("""
@@ -235,7 +141,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### ⚙️ Pengaturan Threshold")
     # FITUR SMART THRESHOLD DI SINI
-    threshold = st.slider("Batas Keyakinan (%)", 0, 100, 40, help="Jika keyakinan AI di bawah angka ini, gambar dianggap bukan daun/tidak dikenal.")
+    threshold = st.slider("Batas Keyakinan (%)", 0, 100, 55, help="Jika keyakinan AI di bawah angka ini, gambar dianggap bukan daun/tidak dikenal.")
 
 # ==========================================
 # 4. HALAMAN DIAGNOSA
@@ -252,7 +158,7 @@ if pilihan == "🔍 Diagnosa Penyakit":
     
     with tab1:
         files = st.file_uploader("Upload Foto (JPG/PNG)", type=["jpg","png","jpeg"], accept_multiple_files=True)
-        if st.button("🚀 Analisis Sekarang") and files:
+        if st.button("Analisis Sekarang") and files:
             uploaded = files
             source = "upload"
             
@@ -266,7 +172,7 @@ if pilihan == "🔍 Diagnosa Penyakit":
     # PROCESS
     if uploaded:
         st.session_state.results = []
-        with st.status("🤖 AI Sedang Menganalisis...", expanded=True) as status:
+        with st.status("AI Sedang Menganalisis...", expanded=True) as status:
             time.sleep(0.5) 
             
             for up_file in uploaded:
@@ -307,10 +213,36 @@ if pilihan == "🔍 Diagnosa Penyakit":
     # OUTPUT
     if st.session_state.results:
         st.markdown("### 📝 Hasil Diagnosa Detil")
-        if st.button("🔄 Reset"): st.session_state.results = []; st.rerun()
+        if st.button("🔄 Reset"):
+            st.session_state.results = []
+            st.rerun()
 
+        # ==========================================
+        # 📊 EVALUASI TESTING DATASET (SEKALI SAJA)
+        # ==========================================
+        total_data = len(st.session_state.results)
+        recognized = sum(1 for r in st.session_state.results if not r['is_unknown'])
+        unknown = total_data - recognized
+        acc_testing = (recognized / total_data) * 100 if total_data > 0 else 0
+
+        st.markdown('<div class="content-box">', unsafe_allow_html=True)
+        st.subheader("📊 Evaluasi Testing Dataset")
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total Data Testing", total_data)
+        c2.metric("Data Dikenali", recognized)
+        c3.metric("Data Tidak Dikenali", unknown)
+
+        st.metric(
+            f"Akurasi Testing (Threshold {threshold}%)",
+            f"{acc_testing:.2f}%"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ==========================================
+        # 🔍 DETAIL HASIL PER GAMBAR
+        # ==========================================
         for res in st.session_state.results:
-            # Tentukan Warna Box
             if res['is_unknown']:
                 box_class = "result-box unknown"
                 title_text = "⚠️ OBJEK TIDAK DIKENALI"
@@ -323,15 +255,13 @@ if pilihan == "🔍 Diagnosa Penyakit":
                 box_class = "result-box sick"
                 title_text = f"🦠 {res['prediksi']}"
                 title_color = "#dc2626"
-            
-            # KOTAK HASIL
+
             st.markdown(f'<div class="{box_class}">', unsafe_allow_html=True)
             col1, col2 = st.columns([1.5, 2.5])
-            
+
             with col1:
                 st.image(res['img'], caption=res['file'], use_container_width=True)
-                
-                # --- GRAFIK ALTAIR (DIPERBAIKI & LEBIH RAPI) ---
+
                 if not res['is_unknown']:
                     st.caption("📊 Analisis Probabilitas:")
                     chart = alt.Chart(res['chart_data']).mark_bar().encode(
@@ -339,50 +269,80 @@ if pilihan == "🔍 Diagnosa Penyakit":
                         y=alt.Y('Kategori', sort='-x', title=None),
                         color=alt.condition(
                             alt.datum.Kategori == res['prediksi'],
-                            alt.value('#ef4444'),  # Warna Merah untuk pemenang
-                            alt.value('#e5e7eb')   # Warna Abu untuk lainnya
+                            alt.value('#ef4444'),
+                            alt.value('#e5e7eb')
                         ),
                         tooltip=['Kategori', 'Confidence (%)']
                     ).properties(height=120)
                     st.altair_chart(chart, use_container_width=True)
-                # -----------------------------------------------
-            
+
             with col2:
-                st.markdown(f"<h2 style='color: {title_color}; margin:0;'>{title_text}</h2>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<h2 style='color:{title_color};margin:0'>{title_text}</h2>",
+                    unsafe_allow_html=True
+                )
                 st.markdown(f"**Akurasi Deteksi:** {res['conf']}")
                 st.markdown("---")
-                
+
                 if res['is_unknown']:
                     st.error("Sistem menolak hasil ini.")
-                    st.write(f"Tingkat keyakinan AI hanya **{res['conf']}** (di bawah batas {threshold}%).")
-                    st.write("Kemungkinan penyebab: Foto buram, pencahayaan kurang, atau objek bukan daun tomat.")
+                    st.write(
+                        f"Tingkat keyakinan AI hanya **{res['conf']}** "
+                        f"(di bawah batas {threshold}%)."
+                    )
+                    st.write(
+                        "Kemungkinan penyebab: foto buram, pencahayaan kurang, "
+                        "atau objek bukan daun tomat."
+                    )
                 else:
                     info = knowledge_base.get(res['prediksi'], {})
-                    t_solusi, t_gejala = st.tabs(["💊 **SOLUSI**", "🔍 **GEJALA**"])
+                    t_solusi, t_gejala = st.tabs(
+                        ["💊 **SOLUSI**", "🔍 **GEJALA**"]
+                    )
                     with t_solusi:
                         st.info(info.get('treatment'))
                     with t_gejala:
                         st.write(info.get('symptoms'))
-            
+
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # DOWNLOAD
+        # ==========================================
+        # 📥 DOWNLOAD LAPORAN
+        # ==========================================
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
         st.subheader("📥 Download Laporan")
         c1, c2 = st.columns(2)
-        
-        # Bersihkan data untuk CSV (hapus gambar/chart data)
-        clean_data = [{k:v for k,v in r.items() if k not in ['img', 'chart_data']} for r in st.session_state.results]
-        
+
+        clean_data = [
+            {k: v for k, v in r.items() if k not in ['img', 'chart_data']}
+            for r in st.session_state.results
+        ]
+
         with c1:
-            st.download_button("📄 Download CSV", pd.DataFrame(clean_data).to_csv(index=False).encode('utf-8'), "report.csv", "text/csv", use_container_width=True)
+            st.download_button(
+                "📄 Download CSV",
+                pd.DataFrame(clean_data).to_csv(index=False).encode('utf-8'),
+                "report.csv",
+                "text/csv",
+                use_container_width=True
+            )
+
         with c2:
             try:
                 pdf_bytes = create_pdf(st.session_state.results)
-                st.download_button("📕 Download PDF", pdf_bytes, "report.pdf", "application/pdf", use_container_width=True)
+                st.download_button(
+                    "📕 Download PDF",
+                    pdf_bytes,
+                    "report.pdf",
+                    "application/pdf",
+                    use_container_width=True
+                )
             except Exception as e:
                 st.error(f"Gagal generate PDF: {e}")
+
         st.markdown('</div>', unsafe_allow_html=True)
+
+
 
 # ==========================================
 # 5. HALAMAN ENSIKLOPEDI (FIXED CONTENT)

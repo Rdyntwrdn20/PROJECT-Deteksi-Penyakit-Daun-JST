@@ -174,6 +174,14 @@ disp.plot(cmap="Blues", values_format="d")
 plt.title("Confusion Matrix MobileNetV2")
 plt.tight_layout()
 
+# ==========================
+# TESTING EVALUATION
+# ==========================
+test_loss, test_accuracy = model.evaluate(test_ds)
+print(f"Test Accuracy : {test_accuracy*100:.2f}%")
+print(f"Test Loss     : {test_loss:.4f}")
+
+
 # Simpan gambar confusion matrix
 plt.savefig("confusion_matrix.png")
 print("Confusion matrix disimpan sebagai confusion_matrix.png")
