@@ -7,9 +7,9 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLRO
 import matplotlib.pyplot as plt
 import os
 
-# ==========================
+
 # KONFIGURASI
-# ==========================
+
 DATA_DIR = "DATASET"
 TRAIN_DIR = os.path.join(DATA_DIR, "train")
 VAL_DIR = os.path.join(DATA_DIR, "val")
@@ -18,9 +18,9 @@ IMG_SIZE = 224
 BATCH_SIZE = 32
 EPOCHS = 25
 
-# ==========================
+
 # LOAD DATASET
-# ==========================
+
 train_ds = tf.keras.utils.image_dataset_from_directory(
     TRAIN_DIR,
     image_size=(IMG_SIZE, IMG_SIZE),
@@ -45,16 +45,16 @@ class_names = train_ds.class_names
 print("Class Names:", class_names)
 
 
-# ==========================
+
 # PREFETCH
-# ==========================
+
 AUTOTUNE = tf.data.AUTOTUNE
 train_ds = train_ds.prefetch(AUTOTUNE)
 val_ds = val_ds.prefetch(AUTOTUNE)
 
-# ==========================
+
 # PREPROCESSING
-# ==========================
+
 preprocess = tf.keras.applications.mobilenet_v2.preprocess_input
 
 
@@ -62,9 +62,9 @@ train_ds = train_ds.map(lambda x, y: (preprocess(x), y)).prefetch(AUTOTUNE)
 val_ds   = val_ds.map(lambda x, y: (preprocess(x), y)).prefetch(AUTOTUNE)
 test_ds  = test_ds.map(lambda x, y: (preprocess(x), y)).prefetch(AUTOTUNE)
 
-# ==========================
+
 # ARSITEKTUR MODEL
-# ==========================
+
 base_model = MobileNetV2(
     weights="imagenet",
     include_top=False,
@@ -87,9 +87,9 @@ model.compile(
 
 model.summary()
 
-# ==========================
+
 # CALLBACKS
-# ==========================
+
 checkpoint = ModelCheckpoint(
     "mobilenetv2_best.keras",
     monitor="val_accuracy",
@@ -110,9 +110,9 @@ reduce_lr = ReduceLROnPlateau(
     min_lr=1e-6
 )
 
-# ==========================
+
 # TRAINING
-# ==========================
+
 history = model.fit(
     train_ds,
     validation_data=val_ds,
@@ -123,9 +123,9 @@ history = model.fit(
 model.save("mobilenetv2_final.h5")
 print("Model final disimpan!")
 
-# ==========================
+
 # GRAFIK TRAINING
-# ==========================
+
 plt.figure(figsize=(12,5))
 
 plt.subplot(1,2,1)
@@ -148,9 +148,9 @@ plt.savefig(filename_grafik)
 print(f"Grafik berhasil disimpan sebagai {filename_grafik}")
 # ----------------------------
 
-# ==========================
+
 # CONFUSION MATRIX
-# ==========================
+
 print("\nMembuat Confusion Matrix...")
 
 # Prediksi data test
@@ -174,9 +174,9 @@ disp.plot(cmap="Blues", values_format="d")
 plt.title("Confusion Matrix MobileNetV2")
 plt.tight_layout()
 
-# ==========================
+
 # TESTING EVALUATION
-# ==========================
+
 test_loss, test_accuracy = model.evaluate(test_ds)
 print(f"Test Accuracy : {test_accuracy*100:.2f}%")
 print(f"Test Loss     : {test_loss:.4f}")
